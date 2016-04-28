@@ -1,4 +1,4 @@
-/*
+﻿/*
  * Licensed to the Apache Software Foundation (ASF) under one
  * or more contributor license agreements.  See the NOTICE file
  * distributed with this work for additional information
@@ -19,36 +19,52 @@
 
 $(document).ajaxStart(function() {
     $("#spinner").show();
+    document.getElementById("opacityDiv").style.opacity = 0.3;
 });
 
 $(document).ajaxStop(function() {
     $("#spinner").hide();
+    document.getElementById("opacityDiv").style.opacity = 1.0;
 });
+
 $(document).ready(function() {
-    window.localStorage.clear();
+	console.log("mapRange: "+ window.localStorage.getItem("mapRange") );
+    document.addEventListener("backbutton", onBackKeyDown, false);
+    
+    //window.localStorage.clear();
+	if( window.localStorage.getItem("mapRange") === null ) {
+		window.localStorage.setItem("mapRange",5);
+	}
+	if( window.localStorage.getItem("notificationRange") === null ) {
+		window.localStorage.setItem("notificationRange",0.5)
+	}
+	console.log("notificationRange: "+ window.localStorage.getItem("notificationRange"));
+	window.localStorage.removeItem("info");
     $("#spinner").hide();
     errorPopup.close();
     $(".closeImg").append('<img src='+ base64image.closeImg +'>');
+    geolocation.startFindPosition();
 });
 
-var app = {
-    
+function onBackKeyDown() {
+    navigator.app.exitApp();
+}
+
+var geolocation = {
+    //function that find the current position with gps, internet mobile, wifi or sim
     findCurrentPosition: function() {
 		"use strict";
+        console.log("findCurrentPosition");
 		navigator.geolocation.getCurrentPosition(
 			this.onPositionSuccess,
 			this.onPositionError,
-			{ maximumAge: 5000, timeout: 5000, enableHighAccuracy: true });
+			{ maximumAge: 5000, timeout: 30000, enableHighAccuracy: true });
 	},
 		
-	/*
-	 *	funzione a cui viene passata automaticamente la posizione dal metodo currentPosition
-	 *	o findPosition e viene scritto nel paragraph con id=loc
-	 */
+    //
 	onPositionSuccess: function(position) {
 		"use strict";
         console.log("position: " +position);
-        alert("success");
         app.ajaxCall( position.coords.latitude , position.coords.longitude );
 	},
     
@@ -71,9 +87,50 @@ var app = {
 				break;
 		} 
 		alert( messaggio );
-		document.getElementById( "loc" ).innerHTML = messaggio;
-		
 	},
+    
+    findPositionId: null,
+    
+    startFindPosition: function() {
+        this.findPositionId = navigator.geolocation.watchPosition(this.onPositionSuccess2,
+                                                  this.onPositionError2,
+			{ maximumAge: 5000, timeout: 30000, enableHighAccuracy: true });
+    },
+    
+    onPositionSuccess2: function(position) {
+        "use strict";
+        console.log("position: " +position);
+        document.getElementById( "location" ).innerHTML = "Lat: " + position.coords.latitude + "<br>" +
+                                                          "Lon: " + position.coords.longitude;
+    },
+    
+    onPositionError2: function(error) {
+        "use strict";
+		var messaggio = "";
+		
+		switch (error.code) {
+			   
+			case error.PositionError.PERMISSION_DENIED:
+				messaggio = "L'applicazione non è autorizzata all'acquisizione della posizione corrente";
+				break;
+				   
+			case error.PositionError.POSITION_UNAVAILABLE:
+				messaggio = "Non è disponibile la rilevazione della posizione corrente";
+				break;
+				   
+			case error.PositionError.TIMEOUT:
+				messaggio = "Non è stato possibile rilevare la posizione corrente";
+				break;
+		}
+		document.getElementById( "location" ).innerHTML = messaggio;
+    },
+    
+    stopFindPosition: function() {
+        navigator.geolocation.clearWatch( geolocation.findPositionId );
+    }
+};
+
+var app = {
     
     
     permanentStorage: window.localStorage,
@@ -86,7 +143,7 @@ var app = {
         console.log("lat: "+lat+" long: "+lon);
         $.ajax({
             method : 'get',
-            url : 'http://5.9.211.195:8080/neo4art-services/api/services/geolocation/poi.json?lat='+ lat +'&lng='+ lon,
+            url : 'http://192.168.1.205:8080/GeolocationServlet/poi?lat='+ lat +'&lng='+ lon + '&range=' + window.localStorage.getItem("mapRange"),
             dataType : 'json',
             
             success : function(result) {
@@ -102,6 +159,26 @@ var app = {
                 document.getElementById("popup-text").innerHTML = error.status;
             }
         });
+    },
+    
+    getData: function() {
+        var result = '['
+            + '{"title": "punto1" , "type": "type1" , "image": "image1" , "description": "punto1" , "lat": 45.48180044131416 , "lng": 12.15581157322572},'
+            + '{"title": "punto2" , "type": "type1" , "image": "image2" , "description": "punto2" , "lat": 45.58031244877388 , "lng": 12.093459866077152},'
+            + '{"title": "punto3" , "type": "type1" , "image": "image3" , "description": "punto3" , "lat": 45.50668460758791 , "lng": 12.153354418986025},'
+            + '{"title": "punto4" , "type": "type1" , "image": "image4" , "description": "punto4" , "lat": 45.53572447616481 , "lng": 12.124377901261482},'
+            + '{"title": "punto5" , "type": "type1" , "image": "image5" , "description": "punto5" , "lat": 45.49782970420162 , "lng": 12.187257852446187},'
+            + '{"title": "punto6" , "type": "type1" , "image": "image6" , "description": "punto6" , "lat": 45.46613468164949 , "lng": 12.135853025884211},'
+            + '{"title": "punto7" , "type": "type2" , "image": "image7" , "description": "punto7" , "lat": 45.47780102783627 , "lng": 12.099805098138917},'
+            + '{"title": "punto8" , "type": "type2" , "image": "image8" , "description": "punto8" , "lat": 45.49314542957933 , "lng": 12.104406746663743},'
+            + '{"title": "punto9" , "type": "type2" , "image": "image9" , "description": "punto9" , "lat": 45.43629405234991 , "lng": 12.050538462233956},'
+            + '{"title": "punto10" , "type": "type3" , "image": "image10" , "description": "punto10" , "lat": 45.45635609374537 , "lng": 12.046036411033366},'
+            + '{"title": "punto11" , "type": "type3" , "image": "image11" , "description": "punto11" , "lat": 45.4168799949603 , "lng": 12.058508769624078},'
+            + '{"title": "punto12" , "type": "type3" , "image": "image12" , "description": "punto12" , "lat": 45.49366170951895 , "lng": 12.062884748262343}'
+         + ']';
+        app.permanentStorage.setItem( "info" , JSON.stringify( result ) );
+        //app.permanentStorage.setItem( "info1" , result );
+        window.location.href = "map.html";
     }
 };
 

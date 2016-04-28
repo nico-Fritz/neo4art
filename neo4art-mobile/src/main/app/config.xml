@@ -1,11 +1,11 @@
 <?xml version='1.0' encoding='utf-8'?>
 <widget id="org.neo4art.mobile" version="1.0.0" xmlns="http://www.w3.org/ns/widgets" xmlns:gap="http://phonegap.com/ns/1.0">
-    <name>nome2</name>
+    <name>Neo4Art mobile</name>
     <description>
-        Hello World sample application that responds to the deviceready event.
+        Neo4Art mobile application found all about hystorical artists
     </description>
     <author email="support@phonegap.com" href="http://phonegap.com">
-        PhoneGap Team
+        Neo4Art
     </author>
     <content src="index.html" />
     <preference name="permissions" value="none" />

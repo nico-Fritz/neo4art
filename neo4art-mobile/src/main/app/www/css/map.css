@@ -35,7 +35,7 @@ body {
 }
 
 img {
-    position: relative;
+    position: absolute;
     max-width: 100%;
     height: 100%;
     width: 100%;
@@ -48,17 +48,41 @@ img {
     background-color: transparent;
 }
 
-.unselectable {
-    -webkit-touch-callout: none;
-    -webkit-user-select: none;
-    -khtml-user-select: none;
-    -moz-user-select: none;
-    -ms-user-select: none;
-    user-select: none;
+.img32 {
+    position: absolute;
+    width: 32px;
+    height: 32px;
 }
 
-#markerInfo{
-    z-index: 3;
+#map {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+	top: 0px;
+	left: 0px;
+}
+
+#coverDiv {
+    width: 100%;
+    height: 100%;
+    position: absolute;
+    opacity: 0.3;
+    visibility: hidden;
+}
+
+#divOptionImg {
+    left: 0px;
+    top: 0px;
+}
+
+.closeContainer {
+    position: relative;
+    width: 100%; 
+    height: 34px;
+}
+
+#infoMarker{
+    overflow-y: scroll;
     width: 80%;
     height: 80%;
     position: absolute;
@@ -67,46 +91,40 @@ img {
     visibility: hidden;
     background-color: #CCC;
 }
-    
-.closeImg {
-    z-index: 4;
-    position: absolute;
-    right: -25px;
-    top: -25px;
-    width: 50px;
-    height: 50px;
-}
-    
-.divInfo {
+
+#infoContainer {
     position: relative;
     width: 100%;
     height: 100%;
 }
 
+.closeImg {
+    right: 0px;
+    top: 0px;
+}
+
+.divInfo {
+    position: relative;
+    max-width: 100%;
+    max-height: 60%;
+}
+
 #title {
-    float: left;
     font-size:20px;
     font-weight: bold;
 }
-    
-.textInfo {
-    z-index: 4;
+
+.infoImg {
     position: relative;
-    float: left;
-    min-width: 30%;
     max-width: 100%;
-    width: 30%;
+    min-height: 10%
+    max-height: 60%;
+    width: auto;
     height: auto;
-    top: 0px;
-    left: 0px;
+    box-sizing: content-box;
     border: 2px solid #ff0000;
 }
-    
-.miniImg {
-    max-width: 150px;
-    max-height: 150px;
-}
-    
+
 #path {
     width: 100%;
     line-height:50px;
@@ -121,9 +139,56 @@ img {
     color:#333;
 }
 
-#map {
-    border: 1px solid #f00;
-    position: absolute;
-	width: 100%;
+#optionMenu {
+    display: inline-block;
+    width: 0px;
     height: 100%;
+    position: absolute;
+    left: 0px;
+    top: 0px;
+    background-color: #CCC;
+    transition: width .2s linear;
+}
+
+#optionMenu .logoContainer {
+    display: inline-block;
+    border: 1px solid red;
+    position: absolute;
+    width: 100%;
+    height: 50%;
+    max-width: 100%;
+    max-height: 50%;
+}
+
+#optionMenu .logo {
+    position: static;
+    background-color: white;
+    max-width: 100%;
+    max-height: 100%;
+    height:auto;
+}
+
+.optionMenuContainer {
+    position: static;
+}
+
+.optionButtonContainer {
+	position: static !important;
+}
+
+.optionButton {
+    position: static;
+    visibility: hidden;
+    max-width: 100%;
+    max-height: 50px;
+    width: 100%;;
+    height: 50px;
+    font-size: 20px;
+    border-bottom: 1px solid white;
+    border-top: 1px solid white;
+    transition: visibility .2s linear;
+}
+
+.optionButton-visible {
+    visibility: visible;
 }
