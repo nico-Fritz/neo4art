@@ -1,8 +1,18 @@
 var map;
 var info;
 
+$(window).bind('beforeunload', function(){
+  	map.remove();
+	myPosition.stopFindPosition();
+	console.log( "stop find position\n remove map" );
+});
+
 document.addEventListener("deviceready", function() {
-    
+	if( window.localStorage.getItem("geolocation") !== null ) {
+		myPosition.stopFindPosition();
+		window.localStorage.removeItem("geolocation");
+	}
+	
     // Take the info from the json saved in index.js
     console.log( info );
 	//if( window.localStorage.getItem("info") !== null ) {
@@ -11,6 +21,7 @@ document.addEventListener("deviceready", function() {
     console.log( info.length );
     
     document.addEventListener("backbutton", phoneEvent.onBackKeyDown , false);
+	document.addEventListener("menubutton",phoneEvent.menuButton,false);
     
     // Initialize the map view
     var div = document.getElementById("map");
@@ -19,7 +30,6 @@ document.addEventListener("deviceready", function() {
     if( window.localStorage.getItem("mapType") === null ) {
         window.localStorage.setItem("mapType" , "ROADMAP");
     }
-	tracking.distance = window.localStorage.getItem("notificationRange");
     
     // Wait until the map is ready status.
     map.addEventListener(plugin.google.maps.event.MAP_READY, onMapReady);
@@ -30,12 +40,20 @@ var phoneEvent = {
         if( optionMenu.isOpen ) {
             optionMenu.close();
         } else {
-            if( map != null ) {
+            if( map !== null ) {
                 map.remove();
                 window.location.href = "index.html";
             }            
         }
-    }
+    },
+	
+	menuButton: function() {
+		if( optionMenu.isOpen ) {
+			optionMenu.open();
+		} else {
+			optionMenu.close();
+		}
+	}
 };
 
 function onMapReady() {
@@ -49,17 +67,44 @@ function onMapReady() {
     }
 	
     myPosition.startFindPosition();
+	map.on(plugin.google.maps.event.CAMERA_CHANGE, onMapCameraChanged);
     readMarkers.initMarker();
+}
+
+function onMapCameraChanged(position) {
+	/*console.log(JSON.stringify(position));
+	$.ajax({
+            method : 'get',
+            url : 'http://nico-fritz.asuscomm.com:8080/GeolocationServlet/poi?lat='+ lat +'&lng='+ lon + '&range=' + range,
+            dataType : 'json',
+            
+            success : function(result) {
+                console.log(result);
+                app.permanentStorage.setItem( "info" , JSON.stringify( result ) );
+                //app.permanentStorage.setItem( "info1" , result );
+                window.location.href = "map.html";
+            },
+            
+            error : function(error) {
+                console.log(error.status);
+                errorPopup.open();
+                document.getElementById("popup-text").innerHTML = error.status;
+            }
+        });*/
 }
 
 var myPosition = {
 	
-	findPositionId: null,
+	first: true,
+	
+	setCenter: function() {
+        map.setCenter( drawPath.origin );
+	},
 	
 	startFindPosition: function() {
-        myPosition.findPositionId = navigator.geolocation.watchPosition(myPosition.onPositionSuccess,
+        window.localStorage.setItem("geolocation", navigator.geolocation.watchPosition(myPosition.onPositionSuccess,
                                                   myPosition.onPositionError,
-			{ maximumAge: 5000, timeout: 5000, enableHighAccuracy: true });
+			{ maximumAge: 5000, timeout: 5000, enableHighAccuracy: true }) );
     },
     
     onPositionSuccess: function(position) {
@@ -69,28 +114,50 @@ var myPosition = {
 		var longitude = position.coords.longitude;
 		var latitude = position.coords.latitude;
 		drawPath.origin = new plugin.google.maps.LatLng( latitude , longitude );
-        map.setCenter( drawPath.origin );
+		if( tracking.myPosition != null ) {
+			tracking.myMarker.remove();
+		}
+		if( tracking.circle != null ) {
+			tracking.circle.remove();
+		}
 		
 		map.addMarker(
-            {
-                icon: 'blue',
-                position: drawPath.origin,
-                title: "myPosition"
-            }, function(marker) {
-				marker.getPosition( function(marker) {
-					tracking.myPosition = marker;
-				});
+			{
+				icon: 'blue',
+				position: drawPath.origin,
+				title: "myPosition"
+			}, function(marker) {
+				tracking.myMarker = marker;
+				marker.getPosition(tracking.setMyPosition);
+		});
+		
+		if(drawPath.origin !== null ) {
+			map.addCircle({
+				'center': drawPath.origin,
+				'radius': window.localStorage.getItem("notificationRange")*1000,
+				'strokeWidth': 1,
+				'fillColor' : '#bb0000'
+			}, function(circle) {
+				tracking.circle = circle;
 			});
-			
-			tracking.notificationPush = false;
-			if( tracking.myPosition !== null ) {
-				if( readMarkers.markers !== [] ) {
-					readMarkers.markers.forEach( tracking.markersInRange );
-					if( tracking.notificationPush === true ) {
-						console.log( tracking.markers );
-					}
+		}
+		
+		tracking.notificationPush = false;
+		tracking.equal = false;
+		if( tracking.myPosition !== null ) {
+			if( readMarkers.markers !== [] ) {
+				readMarkers.markers.forEach( tracking.markersInRange );
+				if( tracking.notificationPush === true ) {
+					console.log( tracking.markers );
+					window.alert(tracking.markers);
+					cordova.plugins.notification.local.schedule({
+						title: tracking.markers,
+						text: tracking.markers,
+						icon: "img/icon.png"
+					});
 				}
 			}
+		}
     },
     
     onPositionError: function(error) {
@@ -115,7 +182,7 @@ var myPosition = {
     },
     
     stopFindPosition: function() {
-        navigator.geolocation.clearWatch( myPosition.findPositionId );
+        navigator.geolocation.clearWatch( window.localStorage.getItem("geolocation") );
     }
 };
 
@@ -130,19 +197,27 @@ var readMarkers = {
         for( var i = 0 ; i < info.length ; i++ ) {
             this.createMarker( info[i] , i );
         }
-        this.fitBounds();
+		if(myPosition.first) {
+			if(drawPath.origin === null) {
+				if(myPosition.findPositionId === null ) {
+					myPosition.stopFindPosition();
+					myPosition.startFindPosition();
+				}
+			}/*
+			myPosition.setCenter();
+			myPosition.first = false;
+			map.setZoom(20);*/
+		}
     },
     
     icon: "",
     
     createMarker: function( myMarker , i ) {
-        console.log("lat: " + myMarker.lat + "\nlng: " + myMarker.lng );
         if( myMarker.type === "ArtWork" ) {
             this.icon = base64image.artIcon;
         } else {
             this.icon = base64image.museumIcon;
         }
-        console.log(myMarker);
         map.addMarker(
             {
                 icon: this.icon,
@@ -159,9 +234,7 @@ var readMarkers = {
                     readMarkers.markerListener(marker);
                 }
             }, function(marker) {
-				marker.getPosition(function(marker1){
-					readMarkers.markers[i] = marker1;
-				});
+				marker.getPosition(readMarkers.addMarker);
 			}
         );
         // add this marker to the visible markers in the first view
@@ -194,6 +267,10 @@ var readMarkers = {
         // function that make visible the popup
         infoMarker.open();
     },
+	
+	addMarker: function(marker) {
+		readMarkers.markers.push(marker);
+	},
     
     // function that make visible in the first view all markers
     fitBounds: function() {
@@ -209,22 +286,29 @@ var readMarkers = {
 
 var tracking = {
 	
+	myMarker: null,
+	circle: null,
 	myPosition: null,
 	equal: false,
-	distance: null,
 	markers: [],
 	notificationPush: false,
 	
+	setMyPosition: function(marker) {
+		tracking.myPosition = marker;
+	},
+	
 	markersInRange: function(item1,index1) {
-		if( Math.sqrt( Math.pow(item1.lat - tracking.myPosition.lat,2) + Math.pow(item1.lng - tracking.myPosition.lng,2) ) <= ( tracking.distance * 0.55 ) ) {
-							
+		if( Math.sqrt( Math.pow(item1.lat - tracking.myPosition.lat,2) + Math.pow(item1.lng - tracking.myPosition.lng,2) ) <= ( window.localStorage.getItem("notificationRange") * 0.0051756861 ) ) {
+			
 			tracking.markers.forEach( function(item2,index2) {
 				if( item2 === item1 ) {
 					tracking.equal = true;
+					console.log( tracking.equal );
 				}
 			});
 						
 			if( tracking.equal === false ) {
+				console.log("push");
 				tracking.markers.push( item1 );
 				tracking.notificationPush = true;
 			}

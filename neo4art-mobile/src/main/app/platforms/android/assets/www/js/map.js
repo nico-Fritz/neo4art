@@ -1,14 +1,27 @@
 var map;
 var info;
 
+$(window).bind('beforeunload', function(){
+  	map.remove();
+	myPosition.stopFindPosition();
+	console.log( "stop find position\n remove map" );
+});
+
 document.addEventListener("deviceready", function() {
-    
+	if( window.localStorage.getItem("geolocation") !== null ) {
+		myPosition.stopFindPosition();
+		window.localStorage.removeItem("geolocation");
+	}
+	
     // Take the info from the json saved in index.js
-    info = JSON.parse( window.localStorage.getItem("info") );
-    console.log( info.length );
     console.log( info );
+	//if( window.localStorage.getItem("info") !== null ) {
+    	info = JSON.parse( window.localStorage.getItem("info") );
+	//}
+    console.log( info.length );
     
     document.addEventListener("backbutton", phoneEvent.onBackKeyDown , false);
+	document.addEventListener("menubutton",phoneEvent.menuButton,false);
     
     // Initialize the map view
     var div = document.getElementById("map");
@@ -27,12 +40,20 @@ var phoneEvent = {
         if( optionMenu.isOpen ) {
             optionMenu.close();
         } else {
-            if( map != null ) {
+            if( map !== null ) {
                 map.remove();
                 window.location.href = "index.html";
             }            
         }
-    }
+    },
+	
+	menuButton: function() {
+		if( optionMenu.isOpen ) {
+			optionMenu.open();
+		} else {
+			optionMenu.close();
+		}
+	}
 };
 
 function onMapReady() {
@@ -44,66 +65,130 @@ function onMapReady() {
     } else {
         map.setMapTypeId(plugin.google.maps.MapTypeId.HYBRID);
     }
-    
-    myPosition.mapPosition();
+	
+    myPosition.startFindPosition();
+	map.on(plugin.google.maps.event.CAMERA_CHANGE, onMapCameraChanged);
     readMarkers.initMarker();
 }
 
+function onMapCameraChanged(position) {
+	/*console.log(JSON.stringify(position));
+	$.ajax({
+            method : 'get',
+            url : 'http://nico-fritz.asuscomm.com:8080/GeolocationServlet/poi?lat='+ lat +'&lng='+ lon + '&range=' + range,
+            dataType : 'json',
+            
+            success : function(result) {
+                console.log(result);
+                app.permanentStorage.setItem( "info" , JSON.stringify( result ) );
+                //app.permanentStorage.setItem( "info1" , result );
+                window.location.href = "map.html";
+            },
+            
+            error : function(error) {
+                console.log(error.status);
+                errorPopup.open();
+                document.getElementById("popup-text").innerHTML = error.status;
+            }
+        });*/
+}
+
 var myPosition = {
-    // function that take the current position from gps, mobile internet, wifi or sim
-    mapPosition: function() {
-		"use strict";
-		navigator.geolocation.getCurrentPosition( 
-			this.onPositionSuccess,
-			this.onPositionError, 
-			{ maximumAge: 5000, timeout: 5000, enableHighAccuracy: true });
+	
+	first: true,
+	
+	setCenter: function() {
+        map.setCenter( drawPath.origin );
 	},
+	
+	startFindPosition: function() {
+        window.localStorage.setItem("geolocation", navigator.geolocation.watchPosition(myPosition.onPositionSuccess,
+                                                  myPosition.onPositionError,
+			{ maximumAge: 5000, timeout: 5000, enableHighAccuracy: true }) );
+    },
     
-    // if the position is found
-	onPositionSuccess: function(position) {
-		"use strict";
-        
-        //take the coords of current position
+    onPositionSuccess: function(position) {
+        "use strict";
+        console.log("position: " +position);
+		
 		var longitude = position.coords.longitude;
 		var latitude = position.coords.latitude;
 		drawPath.origin = new plugin.google.maps.LatLng( latitude , longitude );
-        map.setCenter( new plugin.google.maps.LatLng( latitude , longitude ) );
+		if( tracking.myPosition != null ) {
+			tracking.myMarker.remove();
+		}
+		if( tracking.circle != null ) {
+			tracking.circle.remove();
+		}
 		
 		map.addMarker(
-            {
-                icon: 'blue',
-                position: drawPath.origin,
-                title: "myPosition"
-            }
-        );
-	},
+			{
+				icon: 'blue',
+				position: drawPath.origin,
+				title: "myPosition"
+			}, function(marker) {
+				tracking.myMarker = marker;
+				marker.getPosition(tracking.setMyPosition);
+		});
+		
+		if(drawPath.origin !== null ) {
+			map.addCircle({
+				'center': drawPath.origin,
+				'radius': window.localStorage.getItem("notificationRange")*1000,
+				'strokeWidth': 1,
+				'fillColor' : '#bb0000'
+			}, function(circle) {
+				tracking.circle = circle;
+			});
+		}
+		
+		tracking.notificationPush = false;
+		tracking.equal = false;
+		if( tracking.myPosition !== null ) {
+			if( readMarkers.markers !== [] ) {
+				readMarkers.markers.forEach( tracking.markersInRange );
+				if( tracking.notificationPush === true ) {
+					console.log( tracking.markers );
+					window.alert(tracking.markers);
+					cordova.plugins.notification.local.schedule({
+						title: tracking.markers,
+						text: tracking.markers,
+						icon: "img/icon.png"
+					});
+				}
+			}
+		}
+    },
     
-    // if the position is not found
     onPositionError: function(error) {
-		"use strict";
+        "use strict";
 		var messaggio = "";
 		
 		switch (error.code) {
-            
+			   
 			case error.PositionError.PERMISSION_DENIED:
-				messaggio = "The application is not autorized to take actual position"
+				messaggio = "L'applicazione non è autorizzata all'acquisizione della posizione corrente";
 				break;
 				   
 			case error.PositionError.POSITION_UNAVAILABLE:
-				messaggio = "Actual position is not available";
+				messaggio = "Non è disponibile la rilevazione della posizione corrente";
 				break;
 				   
 			case error.PositionError.TIMEOUT:
-				messaggio = "Is not be able to take actual position";
+				messaggio = "Non è stato possibile rilevare la posizione corrente";
 				break;
-		} 
-		alert(messaggio);
-		
-	}
+		}
+		document.getElementById( "location" ).innerHTML = messaggio;
+    },
+    
+    stopFindPosition: function() {
+        navigator.geolocation.clearWatch( window.localStorage.getItem("geolocation") );
+    }
 };
 
 var readMarkers = {
     
+	markers: [],
     LatLngBounds: null,
     
     initMarker: function() {
@@ -112,19 +197,27 @@ var readMarkers = {
         for( var i = 0 ; i < info.length ; i++ ) {
             this.createMarker( info[i] , i );
         }
-        this.fitBounds();
+		if(myPosition.first) {
+			if(drawPath.origin === null) {
+				if(myPosition.findPositionId === null ) {
+					myPosition.stopFindPosition();
+					myPosition.startFindPosition();
+				}
+			}/*
+			myPosition.setCenter();
+			myPosition.first = false;
+			map.setZoom(20);*/
+		}
     },
     
     icon: "",
     
     createMarker: function( myMarker , i ) {
-        console.log("lat: " + myMarker.lat + "\nlng: " + myMarker.lng );
         if( myMarker.type === "ArtWork" ) {
             this.icon = base64image.artIcon;
         } else {
             this.icon = base64image.museumIcon;
         }
-        console.log(myMarker);
         map.addMarker(
             {
                 icon: this.icon,
@@ -140,7 +233,9 @@ var readMarkers = {
                 'markerClick': function(marker) {
                     readMarkers.markerListener(marker);
                 }
-            }
+            }, function(marker) {
+				marker.getPosition(readMarkers.addMarker);
+			}
         );
         // add this marker to the visible markers in the first view
         this.LatLngBounds.extend( new plugin.google.maps.LatLng( myMarker.lat , myMarker.lng ) );
@@ -172,27 +267,61 @@ var readMarkers = {
         // function that make visible the popup
         infoMarker.open();
     },
+	
+	addMarker: function(marker) {
+		readMarkers.markers.push(marker);
+	},
     
     // function that make visible in the first view all markers
     fitBounds: function() {
-        if( window.localStorage.getItem("mapZoom") === null ) {
             map.moveCamera({
                 'target': this.LatLngBounds
             });
             map.getCameraPosition( function(camera) {
                 console.log(camera);
-                window.localStorage.setItem( "mapZoom" , camera.zoom );
             });
-            console.log( window.localStorage.getItem( "mapZoom" ) );
-        } else {
-            map.moveCamera({
-                'target': this.LatLngBounds
-            });
-            map.setZoom(window.localStorage.getItem("mapZoom"));
-            console.log(window.localStorage.getItem("mapZoom"));
-        }
         console.log( this.LatLngBounds );
     }
+};
+
+var tracking = {
+	
+	myMarker: null,
+	circle: null,
+	myPosition: null,
+	equal: false,
+	markers: [],
+	notificationPush: false,
+	
+	setMyPosition: function(marker) {
+		tracking.myPosition = marker;
+	},
+	
+	markersInRange: function(item1,index1) {
+		if( Math.sqrt( Math.pow(item1.lat - tracking.myPosition.lat,2) + Math.pow(item1.lng - tracking.myPosition.lng,2) ) <= ( window.localStorage.getItem("notificationRange") * 0.0051756861 ) ) {
+			
+			tracking.markers.forEach( function(item2,index2) {
+				if( item2 === item1 ) {
+					tracking.equal = true;
+					console.log( tracking.equal );
+				}
+			});
+						
+			if( tracking.equal === false ) {
+				console.log("push");
+				tracking.markers.push( item1 );
+				tracking.notificationPush = true;
+			}
+		} else {
+			tracking.markers.forEach( function(item2,index2) {
+				if( item2 === item1 ) {
+					tracking.markers.splice(index2,1);
+					tracking.notificationPush = true;
+				}
+			});
+		}
+				
+	}
 };
 
 var drawPath = {

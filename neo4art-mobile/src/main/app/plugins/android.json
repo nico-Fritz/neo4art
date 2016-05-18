@@ -10,18 +10,25 @@
         "cordova-plugin-whitelist": {
             "PACKAGE_NAME": "org.neo4art.mobile"
         },
-        "org.apache.cordova.geolocation": {
+        "cordova-plugin-geolocation": {
             "PACKAGE_NAME": "org.neo4art.mobile"
         },
-        "org.apache.cordova.inappbrowser": {
+        "cordova-plugin-googlemaps": {
+            "API_KEY_FOR_ANDROID": "AIzaSyBX7lQwfUQL7RvrinBmEhSZpKlYUzFKZLs",
             "PACKAGE_NAME": "org.neo4art.mobile"
         },
-        "plugin.google.maps": {
+        "de.appplant.cordova.plugin.local-notification": {
             "PACKAGE_NAME": "org.neo4art.mobile"
         }
     },
     "dependent_plugins": {
-        "plugin.http.request": {
+        "cordova-plugin-compat": {
+            "PACKAGE_NAME": "org.neo4art.mobile"
+        },
+        "cordova-plugin-device": {
+            "PACKAGE_NAME": "org.neo4art.mobile"
+        },
+        "cordova-plugin-app-event": {
             "PACKAGE_NAME": "org.neo4art.mobile"
         }
     }

@@ -1,12 +1,4 @@
 {
-    "plugin.google.maps": {
-        "source": {
-            "type": "local",
-            "path": "plugins\\phonegap-googlemaps-plugin-master"
-        },
-        "is_top_level": true,
-        "variables": {}
-    },
     "cordova-plugin-whitelist": {
         "source": {
             "type": "registry",
@@ -15,44 +7,57 @@
         "is_top_level": true,
         "variables": {}
     },
-    "plugin.http.request": {
+    "cordova-plugin-geolocation": {
+        "source": {
+            "type": "git",
+            "url": "https://github.com/apache/cordova-plugin-geolocation.git",
+            "subdir": "."
+        },
+        "is_top_level": true,
+        "variables": {}
+    },
+    "cordova-plugin-compat": {
         "source": {
             "type": "registry",
-            "id": "plugin.http.request"
+            "id": "cordova-plugin-compat"
         },
         "is_top_level": false,
         "variables": {}
     },
-    "org.apache.cordova.geolocation": {
+    "cordova-plugin-googlemaps": {
         "source": {
             "type": "registry",
-            "id": "org.apache.cordova.geolocation"
+            "id": "cordova-plugin-googlemaps"
+        },
+        "is_top_level": true,
+        "variables": {
+            "API_KEY_FOR_ANDROID": "AIzaSyBX7lQwfUQL7RvrinBmEhSZpKlYUzFKZLs",
+            "API_KEY_FOR_IOS": "AIzaSyDKvaZN_e3dej1b_2bbWP65FtTGCnhl1fQ"
+        }
+    },
+    "de.appplant.cordova.plugin.local-notification": {
+        "source": {
+            "type": "git",
+            "url": "https://github.com/katzer/cordova-plugin-local-notifications",
+            "subdir": "."
         },
         "is_top_level": true,
         "variables": {}
     },
-    "org.apache.cordova.inappbrowser": {
+    "cordova-plugin-device": {
         "source": {
             "type": "registry",
-            "id": "org.apache.cordova.inappbrowser"
+            "id": "cordova-plugin-device"
         },
-        "is_top_level": true,
+        "is_top_level": false,
         "variables": {}
     },
-    "cordova-plugin-geolocation": {
+    "cordova-plugin-app-event": {
         "source": {
             "type": "registry",
-            "id": "cordova-plugin-geolocation"
+            "id": "cordova-plugin-app-event"
         },
-        "is_top_level": true,
-        "variables": {}
-    },
-    "cordova-plugin-inappbrowser": {
-        "source": {
-            "type": "registry",
-            "id": "cordova-plugin-inappbrowser"
-        },
-        "is_top_level": true,
+        "is_top_level": false,
         "variables": {}
     }
 }

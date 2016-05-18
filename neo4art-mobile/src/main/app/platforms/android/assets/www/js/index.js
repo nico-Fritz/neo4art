@@ -28,18 +28,29 @@ $(document).ajaxStop(function() {
 });
 
 $(document).ready(function() {
-    document.addEventListener("backbutton", onBackKeyDown, false);
+	
+	console.log("mapRange: "+ window.localStorage.getItem("mapRange") );
+    document.addEventListener("backbutton", events.onBackKeyDown, false);
     
-    window.localStorage.clear();
+    //window.localStorage.clear();
+	if( window.localStorage.getItem("mapRange") === null ) {
+		window.localStorage.setItem("mapRange",5);
+	}
+	if( window.localStorage.getItem("notificationRange") === null ) {
+		window.localStorage.setItem("notificationRange",0.100);
+	}
+	console.log("notificationRange: "+ window.localStorage.getItem("notificationRange"));
+	window.localStorage.removeItem("info");
     $("#spinner").hide();
     errorPopup.close();
     $(".closeImg").append('<img src='+ base64image.closeImg +'>');
-    geolocation.startFindPosition();
 });
 
-function onBackKeyDown() {
-    navigator.app.exitApp();
-}
+var events = {
+	onBackKeyDown: function() {
+    	navigator.app.exitApp();
+	}
+};
 
 var geolocation = {
     //function that find the current position with gps, internet mobile, wifi or sim
@@ -78,47 +89,7 @@ var geolocation = {
 				break;
 		} 
 		alert( messaggio );
-	},
-    
-    findPositionId: null,
-    
-    startFindPosition: function() {
-        this.findPositionId = navigator.geolocation.watchPosition(this.onPositionSuccess2,
-                                                  this.onPositionError2,
-			{ maximumAge: 5000, timeout: 30000, enableHighAccuracy: true });
-    },
-    
-    onPositionSuccess2: function(position) {
-        "use strict";
-        console.log("position: " +position);
-        document.getElementById( "location" ).innerHTML = "Lat: " + position.coords.latitude + "<br>" +
-                                                          "Lon: " + position.coords.longitude;
-    },
-    
-    onPositionError2: function(error) {
-        "use strict";
-		var messaggio = "";
-		
-		switch (error.code) {
-			   
-			case error.PositionError.PERMISSION_DENIED:
-				messaggio = "L'applicazione non è autorizzata all'acquisizione della posizione corrente";
-				break;
-				   
-			case error.PositionError.POSITION_UNAVAILABLE:
-				messaggio = "Non è disponibile la rilevazione della posizione corrente";
-				break;
-				   
-			case error.PositionError.TIMEOUT:
-				messaggio = "Non è stato possibile rilevare la posizione corrente";
-				break;
-		}
-		document.getElementById( "location" ).innerHTML = messaggio;
-    },
-    
-    stopFindPosition: function() {
-        navigator.geolocation.clearWatch( geolocation.findPositionId );
-    }
+	}
 };
 
 var app = {
@@ -130,11 +101,18 @@ var app = {
         window.location.href = "map.html";
     },
     
-    ajaxCall: function( lat , lon ) {
-        console.log("lat: "+lat+" long: "+lon);
+    ajaxCall: function( lat , lng ) {
+        console.log("lat: "+lat+" long: "+lng);
+		var range;
+		if( window.localStorage.getItem("mapRange") < window.localStorage.getItem("notificationRange") )  {
+			range = window.localStorage.getItem("notificationRange");
+		} else {
+			range = window.localStorage.getItem("mapRange");
+		}
         $.ajax({
             method : 'get',
-            url : 'http://nico-fritz.asuscomm.com:8080/GeolocationServlet/poi?lat='+ lat +'&lng='+ lon,
+            url : 'http://5.9.211.195:8080/neo4art-services/api/mobile/pois/around/'+lat+'/'+lng+'/radius/'+range,
+			/*'http://192.168.1.205:8080/GeolocationServlet/poi?lat='+ lat +'&lng='+ lon + '&range=' + range,*/
             dataType : 'json',
             
             success : function(result) {

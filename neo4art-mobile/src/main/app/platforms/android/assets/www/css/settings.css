@@ -5,6 +5,16 @@
     -webkit-user-select: none;                  /* prevent copy paste, to allow, change 'none' to 'text' */
 }
 
+input[type=checkbox]
+{
+	/* Double-sized Checkboxes */
+	-ms-transform: scale(1.5); /* IE */
+	-moz-transform: scale(1.5); /* FF */
+	-webkit-transform: scale(1.5); /* Safari and Chrome */
+	-o-transform: scale(1.5); /* Opera */
+	
+}
+
 html {
     width:100%;
     height:100%;
@@ -17,9 +27,8 @@ body {
     height:100%;
     margin:0px;
     padding:0px;
-    text-transform:uppercase;
     width:100%;
-    background-color: black;
+    background-color: white;
 }
 
 img {
@@ -34,23 +43,27 @@ img {
     width: 100%;
     height: 100%;
     background-color: transparent;
-    color: white;
+    color: black;
+}
+
+.scrollable{
+	overflow: auto; 
+	height: 100%;
 }
 
 .category {
-    text-align: center
+    text-align: center;
+	color: #1BB9CC;
+}
+
+#mapTypeDiv {
+	width: 100%;
 }
 
 .mapType {
-    text-align: left;
-    position: relative;
-    display: inline-block;
     vertical-align: middle;
-    width: 100%;
     height: 52px;
-    box-sizing: border-box;
-    border-bottom: 1px solid white;
-    border-top: 1px solid white;
+	display: inline-block;
 }
 
 .mapTypeText {
@@ -59,20 +72,16 @@ img {
 }
 
 .mapTypeButton {
-    position: absolute;
-    height: 100%;
-    width: 50px;
-    right: 0px;
-    text-align: center;
-    border-left: 1px solid white;
-}
+    display: block;
+	alignment-adjust:middle;
+} 
 
 .img {
     top: 0px;
     left: 0px;
 }
 
-#rangeDiv {
+#zoomDiv {
     position: relative;
     vertical-align: middle;
     width: 100%;
@@ -82,7 +91,7 @@ img {
     border-top: 1px solid white;
 }
 
-#rangeDiv #valueText {
+#zoomDiv #zoomValueText {
     background-color: darkslategray;
     text-align: center;
     margin-top: 15px;
@@ -93,8 +102,57 @@ img {
     border: 1px solid white;
 }
 
-#rangeDiv .slideBar {
+#zoomDiv #zoomSlidebar {
     margin-top: 15px;
     width: 100%;
     height: 20px;
+}
+
+/*#rangeDiv {
+	position: relative;
+    vertical-align: middle;
+    width: 100%;
+    height: 110px;
+    box-sizing: border-box;
+    border-bottom: 1px solid white;
+    border-top: 1px solid white;
+}*/
+
+/*#rangeDiv #rangeValueText {
+    background-color: darkslategray;
+    text-align: center;
+    margin-top: 15px;
+    width: 100%;
+    height: 50px;
+    text-align: center;
+    box-sizing: border-box;
+    border: 1px solid white;
+}*/
+
+#saveDiv {
+	bottom: 0px;
+    vertical-align: middle;
+    width: 100%;
+    height: 110px;
+}
+
+#saveDiv #saveButton {
+	width: 100%;
+	margin: 0 auto;
+}
+
+.category-line {
+	/*width: 100%;
+	height: 3px;*/
+	width: 100%;
+	height: 3px;
+	background-color: lightgrey;
+}
+
+.line {
+	width: 100%;
+	height: 1px;
+	background-color: lightgrey;
+	margin-top: 1px;
+	margin-bottom: 1px;
 }

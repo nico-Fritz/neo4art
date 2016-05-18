@@ -49,32 +49,10 @@ var maptype = {
     }
 }
 
-zoomMap = {
-    value: 0,
-    
-    getValue: function() {
-        this.value = window.localStorage.getItem("mapZoom");
-        $("#zoomBar").val( this.value );
-        $("#zoomValueText").val( this.value );
-    },
-    
-    changeValueBar: function( value ) {
-        console.log(value);
-        $("#zoomValueText").val( value );
-        this.value = value;
-    },
-    
-    changeValueText: function( value ) {
-        console.log(value);
-        $("#zoomBar").val( value );
-        this.value = value;
-    },
-};
-
 var settings = {
 	save: function() {
-		window.localStorage.setItem("mapRange",document.getElementById("rangeValueText").value);
-		console.log("saved: " + document.getElementById("rangeValueText").value);
+		window.localStorage.setItem("notificationRange",document.getElementById("notificationRangeValue").value);
+		console.log("saved: " + document.getElementById("notificationRangeValue").value);
 	}
 };
 
